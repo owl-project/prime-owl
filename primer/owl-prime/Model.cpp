@@ -75,21 +75,18 @@ namespace op {
     if (isDeviceAccessible(rays)) {
       d_rays = rays;
     } else {
-      PING;
       CUDA_CALL(Malloc(&d_rays,numRays*sizeof(Ray)));
       CUDA_CALL(Memcpy(d_rays,rays,numRays*sizeof(Ray),cudaMemcpyDefault));
     }
     if (isDeviceAccessible(hits)) {
       d_hits = hits;
     } else {
-      PING;
       CUDA_CALL(Malloc(&d_hits,numRays*sizeof(Hit)));
       CUDA_CALL(Memcpy(d_hits,hits,numRays*sizeof(Hit),cudaMemcpyDefault));
     }
     if (isDeviceAccessible(activeIDs)) {
       d_activeIDs = activeIDs;
     } else {
-      PING;
       CUDA_CALL(Malloc(&d_activeIDs,numActive*sizeof(int)));
       CUDA_CALL(Memcpy(d_activeIDs,activeIDs,numActive*sizeof(int),cudaMemcpyDefault));
     }
@@ -129,8 +126,6 @@ namespace op {
                      int  numHitsPerRay,
                      OPTraceFlags flags)
   {
-    PING; PRINT(rays); PRINT(hits); PRINT(numRays);
-    
     static std::mutex mutex;
     std::lock_guard<std::mutex> lock(mutex);
 
