@@ -139,7 +139,9 @@ namespace op {
                                    const float *rArray,
                                    size_t strideRadii) override;
     
-    primer::Model *createModel(std::vector<OPInstance> &instances) override;
+    primer::Model *createModel(const std::vector<OPGroup>  &groups,
+                               const std::vector<affine3f> &xfms,
+                               const std::vector<int>      &userIDs) override;
     
     primer::Group *createGroup(std::vector<OPGeom> &geoms) override;
 

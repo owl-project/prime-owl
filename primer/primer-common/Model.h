@@ -25,9 +25,9 @@ namespace primer {
   
   struct Model {
 
-    Model(std::vector<OPInstance> &instances)
-      : instances(instances)
-    {}
+    // Model(std::vector<OPInstance> &instances)
+    //   : instances(instances)
+    // {}
     
     virtual void trace(Ray *rays,
                        Hit *hits,
@@ -75,7 +75,7 @@ namespace primer {
     
     virtual void build() {}
 
-    const std::vector<OPInstance> instances;    
+    // const std::vector<OPInstance> instances;    
     Context *context;
   };
   

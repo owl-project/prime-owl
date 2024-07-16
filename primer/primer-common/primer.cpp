@@ -99,6 +99,7 @@ OP_API void opTrace(/*! the model to trace into */
                     OPTraceFlags flags) 
 {
   assert(model);
+  if (numRays == 0) return;
   castCheck(model)->trace((primer::Ray *)arrayOfRays,
                           (primer::Hit *)arrayOfHits,
                           (int)numRays,
@@ -263,7 +264,7 @@ OP_API OPGeom opSpheres4f(OPContext context,
 #ifdef __CUDACC__
                           const float4 *spheres,
 #else
-                          const primer_float4 *spheres,
+                          const OPfloat4 *spheres,
 #endif
                           size_t   numSpheres)
 {
@@ -273,9 +274,9 @@ OP_API OPGeom opSpheres4f(OPContext context,
                              &spheres->x,
                              &spheres->y,
                              &spheres->z,
-                             sizeof(primer_float4),
+                             sizeof(OPfloat4),
                              &spheres->w,
-                             sizeof(primer_float4));
+                             sizeof(OPfloat4));
 }
   
 
@@ -347,11 +348,13 @@ OP_API OPModel opModelFromGeoms(OPContext _context,
                                 OPGeom *geoms,
                                 size_t numGeoms)
 {
-  OPInstance inst;
-  inst.userID = 0;
-  (affine3f&)inst.xfm = affine3f();
-  inst.group = opGroupCreate(_context,geoms,1);
-  return opModelCreate(_context,&inst,1);
+  // OPInstance inst;
+  affine3f xfm;
+  uint32_t userID = 0;
+  // inst.userID = 0;
+  // (affine3f&)inst.xfm = affine3f();
+  OPGroup group = opGroupCreate(_context,geoms,1);
+  return opModelCreate(_context,&group,(OPTransform*)&xfm,&userID,1);
 }
 
 OP_API OPModel opModelFromGeom(OPContext context,
@@ -454,13 +457,32 @@ OPGroup opGroupCreate(OPContext _context,
 
 OP_API
 OPModel opModelCreate(OPContext    _context,
-                      OPInstance  *instances,
+                      OPGroup     *groups,
+                      OPTransform *xfms,
+                      uint32_t    *userIDs,
                       int          numInstances)
 {
+  PING; PRINT(numInstances);
   Context *context = castCheck(_context);
-  std::vector<OPInstance> _instances(numInstances);
-  std::copy(instances,instances+numInstances,_instances.data());
-  Model *model = context->createModel(_instances);
+  std::vector<int> _userIDs(numInstances);
+  if (userIDs)
+    std::copy(userIDs,userIDs+numInstances,_userIDs.data());
+  else
+    for (int i=0;i<numInstances;i++)
+      _userIDs[i] = i;
+  
+  std::vector<affine3f> _xfms(numInstances);
+  std::copy(xfms,xfms+numInstances,(OPTransform*)_xfms.data());
+
+  std::vector<OPGroup> _groups(numInstances);
+  std::copy(groups,groups+numInstances,_groups.data());
+  
+  // std::vector<OPInstance> _instances(numInstances);
+  // std::copy(instances,instances+numInstances,_instances.data());
+
+  PING;
+  Model *model = context->createModel(_groups,_xfms,_userIDs);
+  PRINT(model);
   assert(model);
   return (OPModel)model;
 }

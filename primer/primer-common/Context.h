@@ -68,7 +68,9 @@ namespace primer {
     virtual Group *createGroup(std::vector<OPGeom> &geoms) = 0;
   
 
-    virtual Model *createModel(std::vector<OPInstance> &instances) = 0;
+    virtual Model *createModel(const std::vector<OPGroup>  &groups,
+                               const std::vector<affine3f> &xfms,
+                               const std::vector<int>      &userIDs) = 0;
     
     static Context *createOffloadContext(int gpuID);
     static Context *createEmbreeContext();

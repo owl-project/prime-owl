@@ -30,7 +30,9 @@ namespace op {
   struct Model : public primer::Model {
 
     Model(Context *context,
-          std::vector<OPInstance> &instances);
+          const std::vector<OPGroup>  &groups,
+          const std::vector<affine3f> &xfms,
+          const std::vector<int>      &userIDs);
 
     void trace(Ray *rays,
                Hit *hits,

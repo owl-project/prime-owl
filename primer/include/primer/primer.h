@@ -28,15 +28,20 @@
 # define OP_IF_CPP(a) /* nothing */
 #endif
 
-struct primer_float4 { float x,y,z,w; };
+struct OPfloat3 { float x,y,z; };
+struct OPfloat4 { float x,y,z,w; };
 
 /*! defines data layout for a input ray for those functions that
   operate on arrays of rays in AoS layout */
 struct OPRay {
-  float origin[3];
-  float tMin;
-  float direction[3];
-  float tMax;
+  OPfloat3 origin;
+  float    tMin;
+  OPfloat3 direction;
+  float    tMax;
+};
+
+struct OPTransform {
+  OPfloat3 v[4];
 };
 
 /*! sruct describing a ray's hit; when user supplied device-side
@@ -243,11 +248,7 @@ extern "C" {
       position, and w coordinate specifies radius */
   OP_API OPGeom opSpheres4f(OPContext context,
                             uint32_t userGeomIDtoUseInHits,
-#ifdef __CUDACC__
-                            const float4 *spheres,
-#else
-                            const primer_float4 *spheres,
-#endif
+                            const OPfloat4 *spheres,
                             size_t   numSpheres);
   
 
@@ -261,28 +262,29 @@ extern "C" {
   // geometry, or from a "plain" list of geometries.
   // ==================================================================
   
-  /*! a affine transform where the first three vectors describe the
-      linear transform, and 'p' is the translation. This is
-      binary-compatible to both embree's AffineSpace<3> as well as
-      owl's owl::common::affine3f. */
-  struct OPInstance {
-    OPGroup     group OP_IF_CPP(=0);
-    /*! the user-provided instance ID that will be returned in
-        Hit::instID */
-    uint32_t    userID OP_IF_CPP(=0);
-    float       xfm[3][4];
-  };
+  // /*! a affine transform where the first three vectors describe the
+  //     linear transform, and 'p' is the translation. This is
+  //     binary-compatible to both embree's AffineSpace<3> as well as
+  //     owl's owl::common::affine3f. */
+  // struct OPInstance {
+  //   OPGroup     group OP_IF_CPP(=0);
+  //   /*! the user-provided instance ID that will be returned in
+  //       Hit::instID */
+  //   uint32_t    userID OP_IF_CPP(=0);
+  //   float       xfm[3][4];
+  // };
   
   
   OP_API
   OPGroup opGroupCreate(OPContext _context,
                         OPGeom *geoms,
                         int numGeoms);
-
   OP_API
-  OPModel opModelCreate(OPContext   context,
-                        OPInstance *instances,
-                        int         numInstances);
+  OPModel opModelCreate(OPContext    context,
+                        OPGroup     *groups,
+                        OPTransform *xfms,
+                        uint32_t    *userIDs,
+                        int          numInstances);
 
 
 

@@ -21,34 +21,35 @@
 
 namespace op {
   using primer::StridedArray;
-
+  
   Model::Model(Context *context,
-               std::vector<OPInstance> &instances)
-    : primer::Model(instances),
+               const std::vector<OPGroup>  &groups,
+               const std::vector<affine3f> &xfms,
+               const std::vector<int>      &userIDs)
+    : // primer::Model(context),
       context(context)
   {
-    std::vector<affine3f> owlXfms;
+    // std::vector<affine3f> owlXfms;
     std::vector<OWLGroup> owlGroups;
-    std::vector<uint32_t> owlInstIDs;
-    for (auto &inst : instances) {
-      op::Group *group = (op::Group *)inst.group;
+    for (auto &g : groups) {
+      op::Group *group = (op::Group *)g;
       if (group->trianglesGroup) {
         owlGroups.push_back(group->trianglesGroup);
-        owlXfms.push_back((const affine3f&)inst.xfm);
-        owlInstIDs.push_back(inst.userID);
+        // owlXfms.push_back((const affine3f&)inst.xfm);
+        // owlInstIDs.push_back(inst.userID);
       }
       if (group->userGroup) {
         owlGroups.push_back(group->userGroup);
-        owlXfms.push_back((const affine3f&)inst.xfm);
-        owlInstIDs.push_back(inst.userID);
+        // owlXfms.push_back((const affine3f&)inst.xfm);
+        // owlInstIDs.push_back(inst.userID);
       }
     }
     handle
       = owlInstanceGroupCreate(context->owl,
                                owlGroups.size(),
                                owlGroups.data(),
-                               owlInstIDs.data(),
-                               (const float *)owlXfms.data());
+                               (const uint32_t*)userIDs.data(),
+                               (const float *)xfms.data());
     owlGroupBuildAccel(handle);
   }
 
@@ -74,18 +75,21 @@ namespace op {
     if (isDeviceAccessible(rays)) {
       d_rays = rays;
     } else {
+      PING;
       CUDA_CALL(Malloc(&d_rays,numRays*sizeof(Ray)));
       CUDA_CALL(Memcpy(d_rays,rays,numRays*sizeof(Ray),cudaMemcpyDefault));
     }
     if (isDeviceAccessible(hits)) {
       d_hits = hits;
     } else {
+      PING;
       CUDA_CALL(Malloc(&d_hits,numRays*sizeof(Hit)));
       CUDA_CALL(Memcpy(d_hits,hits,numRays*sizeof(Hit),cudaMemcpyDefault));
     }
     if (isDeviceAccessible(activeIDs)) {
       d_activeIDs = activeIDs;
     } else {
+      PING;
       CUDA_CALL(Malloc(&d_activeIDs,numActive*sizeof(int)));
       CUDA_CALL(Memcpy(d_activeIDs,activeIDs,numActive*sizeof(int),cudaMemcpyDefault));
     }
@@ -125,6 +129,8 @@ namespace op {
                      int  numHitsPerRay,
                      OPTraceFlags flags)
   {
+    PING; PRINT(rays); PRINT(hits); PRINT(numRays);
+    
     static std::mutex mutex;
     std::lock_guard<std::mutex> lock(mutex);
 

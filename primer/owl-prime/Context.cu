@@ -210,8 +210,6 @@ namespace op {
       = owlManagedMemoryBufferCreate(owl,OWL_INT3,numIndices,0);
     vec3i *d_indices = (vec3i*)owlBufferGetPointer(indexBuffer,0);
 
-    PRINT(vertexStrideInBytes);
-    PRINT(indexStrideInBytes);
     for (int i=0;i<numVertices;i++) 
       d_vertices[i] = getWithOffset(vertices,i,vertexStrideInBytes);
     for (int i=0;i<numIndices;i++) 
@@ -227,9 +225,11 @@ namespace op {
     return new op::Group(this,geoms);
   }
 
-  primer::Model *Context::createModel(std::vector<OPInstance> &instances)
+  primer::Model *Context::createModel(const std::vector<OPGroup>  &groups,
+                                      const std::vector<affine3f> &xfms,
+                                      const std::vector<int>      &userIDs)
   {
-    return new op::Model(this,instances);
+    return new op::Model(this,groups,xfms,userIDs);
   }
   
 } // ::op
